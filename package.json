@@ -1,0 +1,30 @@
+{
+  "name": "infohub-osint-professional",
+  "version": "2.0.0",
+  "description": "Professional OSINT Intelligence Gathering Platform",
+  "main": "packages/frontend/server.js",
+  "scripts": {
+    "start": "node packages/frontend/server.js",
+    "dev": "node packages/frontend/server.js",
+    "build": "echo 'Build complete'",
+    "vercel-build": "echo 'Vercel build complete'"
+  },
+  "keywords": [
+    "osint",
+    "reconnaissance", 
+    "cybersecurity",
+    "intelligence",
+    "security"
+  ],
+  "author": "InfoHub Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "validator": "^13.11.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

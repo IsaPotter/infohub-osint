@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  infohub-all:
+    build:
+      context: .
+      dockerfile: Dockerfile.single
+    env_file: .env
+    container_name: infohub-all
+    environment:
+      - NODE_ENV=development
+      - JWT_SECRET=${JWT_SECRET}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - MINIO_USER=${MINIO_USER}
+      - MINIO_PASSWORD=${MINIO_PASSWORD}
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+      - "3002:3002"
+    volumes:
+      - ./:/app
+    restart: unless-stopped

@@ -1,0 +1,13 @@
+localhost {
+  # Proxy API under /api
+  handle_path /api/* {
+    reverse_proxy infohub-api:3001
+  }
+
+  # Proxy static and app routes to frontend
+  handle {
+    reverse_proxy infohub-frontend:3000
+  }
+
+  tls internal
+}

@@ -1,0 +1,19 @@
+FROM node:18-bullseye-slim
+
+WORKDIR /app
+
+# Install small utilities
+RUN apt-get update && apt-get install -y sqlite3 ca-certificates --no-install-recommends \
+  && rm -rf /var/lib/apt/lists/*
+
+# Copy project
+COPY . /app
+
+# Install (no deps for now, keep fast)
+RUN if [ -f /app/packages/api/package.json ]; then (cd /app/packages/api && npm install --no-audit --no-fund) || true; fi
+RUN if [ -f /app/packages/frontend/package.json ]; then (cd /app/packages/frontend && npm install --no-audit --no-fund) || true; fi
+RUN if [ -f /app/packages/worker/package.json ]; then (cd /app/packages/worker && npm install --no-audit --no-fund) || true; fi
+
+EXPOSE 3000 3001
+
+CMD ["node", "single_start.js"]

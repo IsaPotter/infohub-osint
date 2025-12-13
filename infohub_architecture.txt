@@ -1,0 +1,269 @@
+# InfoHub Pro - Plataforma de Inteligência e Due Diligence
+
+## 🏗️ Arquitetura do Sistema
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Frontend (Next.js)                      │
+│  - Dashboard  - Consultas  - Relatórios  - Monitoramento   │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+┌─────────────────────▼───────────────────────────────────────┐
+│                   API Gateway (Express)                     │
+│         - Rate Limiting  - Auth  - API Keys                 │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+        ┌─────────────┴─────────────┐
+        │                           │
+┌───────▼──────┐           ┌────────▼────────┐
+│  Microserviços│           │   Workers       │
+│               │           │   (Bull Queue)  │
+│ • CNPJ        │           │                 │
+│ • Processos   │           │ • Scraping      │
+│ • OSINT       │           │ • Reports       │
+│ • KYC/KYB     │           │ • Monitoring    │
+└───────┬───────┘           └────────┬────────┘
+        │                            │
+        └────────────┬───────────────┘
+                     │
+        ┌────────────▼────────────┐
+        │    Storage Layer        │
+        │                         │
+        │  • PostgreSQL (Meta)    │
+        │  • Redis (Cache)        │
+        │  • S3 (Relatórios)      │
+        │  • Elasticsearch (Logs) │
+        └─────────────────────────┘
+```
+
+## 📦 Estrutura de Pastas
+
+```
+infohub-pro/
+├── packages/
+│   ├── api/                        # API Principal
+│   │   ├── src/
+│   │   │   ├── modules/
+│   │   │   │   ├── cnpj/          # Módulo CNPJ
+│   │   │   │   ├── processos/      # Processos Judiciais
+│   │   │   │   ├── osint/          # OSINT Tools
+│   │   │   │   ├── kyc/            # KYC/KYB
+│   │   │   │   └── reports/        # Geração de Relatórios
+│   │   │   ├── core/
+│   │   │   │   ├── auth/
+│   │   │   │   ├── rate-limit/
+│   │   │   │   └── logger/
+│   │   │   └── integrations/
+│   │   │       ├── receita-federal/
+│   │   │       ├── serasa/
+│   │   │       └── tribunais/
+│   │   └── package.json
+│   │
+│   ├── workers/                    # Background Jobs
+│   │   ├── src/
+│   │   │   ├── scrapers/
+│   │   │   │   ├── cnpj-scraper.ts
+│   │   │   │   ├── processo-scraper.ts
+│   │   │   │   └── osint-scraper.ts
+│   │   │   ├── processors/
+│   │   │   └── schedulers/
+│   │   └── package.json
+│   │
+│   ├── frontend/                   # Dashboard Web
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   │   ├── dashboard/
+│   │   │   │   ├── consultas/
+│   │   │   │   │   ├── cnpj/
+│   │   │   │   │   ├── processos/
+│   │   │   │   │   └── osint/
+│   │   │   │   └── relatorios/
+│   │   │   ├── components/
+│   │   │   └── services/
+│   │   └── package.json
+│   │
+│   └── shared/                     # Código compartilhado
+│       ├── types/
+│       ├── utils/
+│       └── constants/
+│
+├── docker/
+│   ├── docker-compose.yml
+│   ├── api.Dockerfile
+│   ├── worker.Dockerfile
+│   └── frontend.Dockerfile
+│
+└── docs/
+    ├── api/
+    ├── legal/                      # Documentação legal
+    └── deployment/
+```
+
+## 🔧 Módulos e Funcionalidades
+
+### 1️⃣ **Módulo CNPJ (Receita Federal)**
+- ✅ Consulta via API oficial da Receita Federal
+- ✅ Dados da empresa (razão social, CNAE, endereço)
+- ✅ Quadro societário (sócios e participações)
+- ✅ Situação cadastral
+- ✅ Histórico de alterações
+- ✅ Capital social
+
+### 2️⃣ **Módulo Processos Judiciais**
+- ✅ Busca em tribunais estaduais (TJ)
+- ✅ Tribunais federais (TRF)
+- ✅ STJ e STF (processos públicos)
+- ✅ Diários oficiais
+- ✅ Histórico processual
+- ✅ Partes envolvidas
+
+### 3️⃣ **Módulo OSINT (Open Source Intelligence)**
+- ✅ Busca em redes sociais públicas
+- ✅ Verificação de domínios (WHOIS)
+- ✅ Análise de emails (HaveIBeenPwned)
+- ✅ LinkedIn (dados públicos)
+- ✅ Google dorking ético
+- ✅ Verificação de vazamentos
+
+### 4️⃣ **Módulo KYC/KYB**
+- ✅ Verificação de documentos
+- ✅ Background check empresarial
+- ✅ Análise de risco
+- ✅ Score de compliance
+- ✅ PEP (Pessoas Politicamente Expostas)
+- ✅ Listas restritivas (OFAC, ONU, etc)
+
+### 5️⃣ **Módulo Relatórios**
+- ✅ Geração automática de relatórios PDF
+- ✅ Dashboard interativo
+- ✅ Gráficos e visualizações
+- ✅ Export em múltiplos formatos
+- ✅ Relatórios agendados
+- ✅ Alertas personalizados
+
+## 🔐 Segurança e Compliance
+
+### Autenticação e Autorização
+- JWT com refresh tokens
+- API Keys para integrações
+- Rate limiting por usuário/IP
+- 2FA (Two-Factor Authentication)
+- Audit logs completos
+
+### LGPD Compliance
+- Consentimento explícito do usuário
+- Minimização de dados
+- Direito ao esquecimento
+- Portabilidade de dados
+- DPO (Data Protection Officer) configurável
+- Logs de acesso e uso
+
+### Termos de Uso (OBRIGATÓRIO)
+Usuários devem aceitar:
+1. Uso apenas para fins legítimos
+2. Não usar para stalking ou assédio
+3. Respeitar privacidade de terceiros
+4. Não revender dados obtidos
+5. Compliance com LGPD
+
+## 💾 Banco de Dados
+
+### PostgreSQL - Tabelas Principais
+
+```sql
+-- Usuários e autenticação
+users
+user_subscriptions
+api_keys
+
+-- Consultas realizadas
+queries (log de todas consultas)
+query_cache (cache de resultados)
+
+-- CNPJ
+cnpj_data
+cnpj_socios
+cnpj_history
+
+-- Processos
+processos_judiciais
+processo_movimentacoes
+processo_partes
+
+-- OSINT
+osint_profiles
+osint_social_media
+osint_domains
+
+-- KYC
+kyc_verifications
+kyc_risk_scores
+pep_lists
+
+-- Relatórios
+reports
+report_schedules
+```
+
+## 🚀 APIs e Integrações
+
+### APIs Oficiais Gratuitas
+1. **Receita Federal CNPJ** - Oficial e gratuita
+2. **CVM** - Dados de empresas listadas
+3. **Tribunal de Justiça** - Consultas públicas
+4. **IBGE** - Dados estatísticos
+5. **BACEN** - Informações financeiras
+
+### APIs Pagas (Opcional)
+1. **Serasa Experian** - Background check
+2. **Boa Vista** - Score de crédito
+3. **ClearSale** - Antifraude
+4. **BigDataCorp** - Enriquecimento de dados
+
+### APIs Open Source
+1. **HaveIBeenPwned** - Vazamentos
+2. **VirusTotal** - Análise de domínios
+3. **Shodan** - IoT e infraestrutura
+4. **Hunter.io** - Verificação de emails
+
+## 📊 Planos e Monetização
+
+### Free Tier
+- 10 consultas/mês
+- Relatórios básicos
+- Suporte por email
+
+### Professional ($49/mês)
+- 500 consultas/mês
+- Todos os módulos
+- Relatórios avançados
+- API access
+- Suporte prioritário
+
+### Enterprise ($299/mês)
+- Consultas ilimitadas
+- White-label
+- Integrações customizadas
+- Dedicated support
+- SLA garantido
+
+## ⚖️ Aspectos Legais
+
+### Documentos Necessários
+1. **Termos de Uso** - Definindo uso permitido
+2. **Política de Privacidade** - LGPD compliant
+3. **Contrato de API** - Para usuários enterprise
+4. **DPA** (Data Processing Agreement)
+
+### Disclaimers Obrigatórios
+- "Dados obtidos de fontes públicas"
+- "Usuário responsável pelo uso das informações"
+- "Não nos responsabilizamos por decisões baseadas nos dados"
+- "Uso apenas para fins legítimos e com consentimento"
+
+### Proteções Legais
+1. Rate limiting agressivo
+2. Bloqueio de IPs suspeitos
+3. Detecção de uso indevido
+4. Relatórios de abuse
+5. Cooperação com autoridades

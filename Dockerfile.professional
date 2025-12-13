@@ -1,0 +1,52 @@
+FROM node:18-alpine
+
+# Install system dependencies for network tools
+RUN apk add --no-cache \
+    curl \
+    wget \
+    nmap \
+    bind-tools \
+    whois \
+    openssl \
+    python3 \
+    py3-pip \
+    git
+
+# Install additional OSINT tools
+RUN pip3 install --no-cache-dir \
+    requests \
+    beautifulsoup4 \
+    dnspython \
+    python-whois
+
+# Create app directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY packages/*/package*.json ./packages/*/
+
+# Install Node.js dependencies
+RUN npm install
+
+# Copy application code
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/reports /app/temp
+
+# Set permissions
+RUN chmod +x /app/packages/*/server.js
+
+# Expose ports
+EXPOSE 3000 3001 3002
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3001/api/health || exit 1
+
+# Start script
+COPY start-professional.sh /app/
+RUN chmod +x /app/start-professional.sh
+
+CMD ["/app/start-professional.sh"]
