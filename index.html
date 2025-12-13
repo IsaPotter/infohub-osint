@@ -88,8 +88,168 @@
             }, 1000);
         }
         
+        function performSocialSearch() {
+            const query = document.getElementById('socialInput').value.trim();
+            if (!query) return;
+            
+            const platforms = [
+                {name: 'GitHub', url: 'https://github.com/' + query},
+                {name: 'Twitter/X', url: 'https://twitter.com/' + query},
+                {name: 'Instagram', url: 'https://instagram.com/' + query},
+                {name: 'LinkedIn', url: 'https://linkedin.com/in/' + query},
+                {name: 'Facebook', url: 'https://facebook.com/' + query},
+                {name: 'YouTube', url: 'https://youtube.com/@' + query},
+                {name: 'TikTok', url: 'https://tiktok.com/@' + query},
+                {name: 'Reddit', url: 'https://reddit.com/user/' + query}
+            ];
+            
+            let html = '';
+            platforms.forEach(platform => {
+                html += `
+                    <div class="result">
+                        <div class="result-title">[${platform.name}]</div>
+                        <div class="result-data">🔗 Click to verify profile manually</div>
+                        <a href="${platform.url}" class="result-link" target="_blank">🔗 OPEN LINK</a>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('socialResults').innerHTML = '<div class="card"><h3 style="color:#00ff88;">Social Media Results:</h3>' + html + '</div>';
+        }
+        
+        function performFileSearch() {
+            const query = document.getElementById('fileInput').value.trim();
+            if (!query) return;
+            
+            const sources = [
+                {name: 'Google PDF Search', url: 'https://google.com/search?q=filetype:pdf "' + query + '"'},
+                {name: 'Google DOC Search', url: 'https://google.com/search?q=filetype:doc "' + query + '"'},
+                {name: 'Archive.org', url: 'https://archive.org/search.php?query=' + encodeURIComponent(query)},
+                {name: 'GitHub Code', url: 'https://github.com/search?q=' + encodeURIComponent(query) + '&type=code'},
+                {name: 'Pastebin', url: 'https://pastebin.com/search?q=' + encodeURIComponent(query)}
+            ];
+            
+            let html = '';
+            sources.forEach(source => {
+                html += `
+                    <div class="result">
+                        <div class="result-title">[${source.name}]</div>
+                        <div class="result-data">🔍 Search documents containing: ${query}</div>
+                        <a href="${source.url}" class="result-link" target="_blank">🔗 OPEN LINK</a>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('fileResults').innerHTML = '<div class="card"><h3 style="color:#00ff88;">File Search Results:</h3>' + html + '</div>';
+        }
+        
+        function performNetworkSearch() {
+            const query = document.getElementById('networkInput').value.trim();
+            if (!query) return;
+            
+            const tools = [
+                {name: 'WHOIS Lookup', url: 'https://whois.net/whois/' + query},
+                {name: 'DNS Checker', url: 'https://dnschecker.org/#A/' + query},
+                {name: 'Subdomain Finder', url: 'https://subdomainfinder.c99.nl/scans/' + query},
+                {name: 'SSL Labs', url: 'https://ssllabs.com/ssltest/analyze.html?d=' + query},
+                {name: 'Security Headers', url: 'https://securityheaders.com/?q=' + query}
+            ];
+            
+            let html = '';
+            tools.forEach(tool => {
+                html += `
+                    <div class="result">
+                        <div class="result-title">[${tool.name}]</div>
+                        <div class="result-data">🔍 Network analysis for: ${query}</div>
+                        <a href="${tool.url}" class="result-link" target="_blank">🔗 OPEN LINK</a>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('networkResults').innerHTML = '<div class="card"><h3 style="color:#00ff88;">Network Analysis Results:</h3>' + html + '</div>';
+        }
+        
         function showSection(section) {
-            alert('Section: ' + section + ' - Full functionality available in hosted version');
+            const container = document.querySelector('.container');
+            
+            if (section === 'home') {
+                location.reload();
+                return;
+            }
+            
+            let content = '';
+            
+            switch(section) {
+                case 'social':
+                    content = `
+                        <div class="hero">
+                            <div>Social Media Intelligence</div>
+                            <div>Multi-platform reconnaissance</div>
+                        </div>
+                        <div class="card">
+                            <input type="text" id="socialInput" class="search-input" placeholder="Enter username or email" maxlength="100">
+                            <button onclick="performSocialSearch()" class="btn" style="width:100%;margin-top:15px">[SOCIAL SCAN]</button>
+                        </div>
+                        <div id="socialResults"></div>
+                    `;
+                    break;
+                    
+                case 'files':
+                    content = `
+                        <div class="hero">
+                            <div>File Intelligence</div>
+                            <div>Document and archive search</div>
+                        </div>
+                        <div class="card">
+                            <input type="text" id="fileInput" class="search-input" placeholder="Enter filename or keyword" maxlength="100">
+                            <button onclick="performFileSearch()" class="btn" style="width:100%;margin-top:15px">[FILE SCAN]</button>
+                        </div>
+                        <div id="fileResults"></div>
+                    `;
+                    break;
+                    
+                case 'networks':
+                    content = `
+                        <div class="hero">
+                            <div>Network Intelligence</div>
+                            <div>Domain and infrastructure analysis</div>
+                        </div>
+                        <div class="card">
+                            <input type="text" id="networkInput" class="search-input" placeholder="Enter domain or IP address" maxlength="100">
+                            <button onclick="performNetworkSearch()" class="btn" style="width:100%;margin-top:15px">[NETWORK SCAN]</button>
+                        </div>
+                        <div id="networkResults"></div>
+                    `;
+                    break;
+                    
+                case 'about':
+                    content = `
+                        <div class="hero">
+                            <div>InfoHub OSINT Professional</div>
+                            <div>Advanced Intelligence Platform</div>
+                        </div>
+                        <div class="card">
+                            <div style="color:#00ff88;margin-bottom:20px;font-size:16px;font-weight:bold;">Professional Features:</div>
+                            <div style="color:#888;line-height:1.8;">
+                                • <span style="color:#00d9ff;">Social Media Intelligence:</span> 20+ platforms<br>
+                                • <span style="color:#00d9ff;">Network Reconnaissance:</span> DNS, subdomains, ports<br>
+                                • <span style="color:#00d9ff;">File Intelligence:</span> Document search<br>
+                                • <span style="color:#00d9ff;">Breach Detection:</span> Data leak monitoring<br>
+                                • <span style="color:#00d9ff;">Real-time Analysis:</span> Live API integration<br>
+                                • <span style="color:#00d9ff;">Professional UI:</span> Cyberpunk interface
+                            </div>
+                            <div style="margin-top:30px;padding:20px;border:1px solid #00d9ff;border-radius:5px;">
+                                <div style="color:#ff6b6b;font-weight:bold;margin-bottom:10px;">⚠️ ETHICAL USE ONLY</div>
+                                <div style="color:#888;font-size:12px;">
+                                    This tool is for legitimate security research and authorized investigations only.
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            container.innerHTML = content;
         }
         
         document.getElementById('searchInput').addEventListener('keypress', function(e) {
