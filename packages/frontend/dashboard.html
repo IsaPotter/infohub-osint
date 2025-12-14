@@ -297,6 +297,45 @@
             color: #888;
             font-size: 14px;
         }
+        
+        .footer {
+            background: linear-gradient(90deg, #16213e 0%, #0f3460 100%);
+            border-top: 2px solid #00ff88;
+            padding: 30px 20px;
+            margin-top: 50px;
+            text-align: center;
+            color: #888;
+        }
+        
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .footer-link {
+            color: #00d9ff;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .footer-link:hover {
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0,255,136,0.5);
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid #333;
+            padding-top: 20px;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -318,15 +357,15 @@
                 <div class="card search-section">
                     <div class="card-title">Intelligence Gathering</div>
                     <div class="search-container">
-                        <input type="text" id="searchInput" class="search-input" placeholder="Enter target: username, email, domain, IP, or phone">
+                        <input type="text" id="searchInput" class="search-input" placeholder="Enter target: username, email, domain, or crypto address">
                         <button onclick="startScan()" class="btn">Scan Target</button>
                     </div>
                     <div class="scan-type">
-                        <button class="scan-btn active" data-type="comprehensive">Comprehensive</button>
+                        <button class="scan-btn active" data-type="auto">Auto</button>
                         <button class="scan-btn" data-type="social">Social Media</button>
-                        <button class="scan-btn" data-type="network">Network</button>
                         <button class="scan-btn" data-type="email">Email</button>
-                        <button class="scan-btn" data-type="phone">Phone</button>
+
+                        <button class="scan-btn" data-type="domain">Domain</button>
                     </div>
                 </div>
             </div>
@@ -395,8 +434,24 @@
         </div>
     </main>
 
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="https://github.com" target="_blank" class="footer-link">🐙 GitHub</a>
+                <a href="https://instagram.com" target="_blank" class="footer-link">📷 Instagram</a>
+                <a href="https://wa.me" target="_blank" class="footer-link">💬 WhatsApp</a>
+                <a href="register.html" class="footer-link">📝 Cadastro</a>
+                <a href="#" class="footer-link">⚖️ Legal</a>
+            </div>
+            <div class="footer-bottom">
+                <p>InfoHub OSINT Pro v3.0.0 | Made with ❤️ for the Global OSINT Community</p>
+                <p style="margin-top: 10px;">© 2024 InfoHub OSINT. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
     <script>
-        let currentScanType = 'comprehensive';
+        let currentScanType = 'auto';
         let scanHistory = [];
 
         // Initialize dashboard
@@ -426,32 +481,44 @@
         async function startScan() {
             const target = document.getElementById('searchInput').value.trim();
             if (!target) {
-                alert('Please enter a target to scan');
+                alert('Por favor, insira um alvo para escanear');
+                return;
+            }
+            
+            if (target.length < 2) {
+                alert('Entrada muito curta. Mínimo 2 caracteres.');
+                return;
+            }
+            
+            if (target.length > 100) {
+                alert('Entrada muito longa. Máximo 100 caracteres.');
                 return;
             }
 
             showLoading();
             
             try {
-                const response = await fetch('/api/scan/comprehensive', {
+                const response = await fetch('/api/search', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        target: target,
+                        query: target,
                         type: currentScanType
                     })
                 });
 
                 const result = await response.json();
                 
-                if (result.success) {
-                    displayResults(result.data);
-                    addToHistory(target, result.data);
+                if (result.error) {
+                    showError(result.error);
+                } else if (result.results) {
+                    displayResults(result);
+                    addToHistory(target, result.results);
                     updateStats();
                 } else {
-                    showError(result.error || 'Scan failed');
+                    showError('Nenhum resultado encontrado');
                 }
             } catch (error) {
                 showError('Network error: ' + error.message);
@@ -476,118 +543,43 @@
             const results = document.getElementById('scanResults');
             let html = '';
 
-            // Summary
+            if (!data.results || data.results.length === 0) {
+                results.innerHTML = '<div class="result-item"><div class="result-data">Nenhum resultado encontrado</div></div>';
+                return;
+            }
+
             html += `
                 <div class="result-item">
                     <div class="result-header">
-                        <div class="result-title">Scan Summary</div>
-                        <div class="result-status status-success">Completed</div>
+                        <div class="result-title">Resumo da Busca</div>
+                        <div class="result-status status-success">Concluido</div>
                     </div>
                     <div class="result-data">
-                        Target: ${data.target}<br>
-                        Execution Time: ${data.executionTime}ms<br>
-                        Total Findings: ${data.summary.totalFindings}<br>
-                        Timestamp: ${new Date(data.timestamp).toLocaleString()}
+                        Alvo: ${data.query}<br>
+                        Tipo: ${data.type}<br>
+                        Resultados: ${data.results.length}<br>
+                        Timestamp: ${new Date(data.timestamp).toLocaleString('pt-BR')}
                     </div>
                 </div>
             `;
 
-            // Social Media Results
-            if (data.findings.social) {
-                data.findings.social.forEach(platform => {
-                    const status = platform.status === 'found' ? 'success' : 
-                                 platform.status === 'error' ? 'error' : 'warning';
-                    
-                    html += `
-                        <div class="result-item">
-                            <div class="result-header">
-                                <div class="result-title">${platform.platform}</div>
-                                <div class="result-status status-${status}">${platform.status}</div>
-                            </div>
-                            <div class="result-data">
-                                ${platform.data || platform.error || 'No additional data'}
-                                ${platform.url ? `<br><a href="${platform.url}" target="_blank" style="color: #00d9ff;">View Profile</a>` : ''}
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-
-            // Network Results
-            if (data.findings.network) {
-                const network = data.findings.network;
-                
-                if (network.openPorts && network.openPorts.length > 0) {
-                    html += `
-                        <div class="result-item">
-                            <div class="result-header">
-                                <div class="result-title">Open Ports</div>
-                                <div class="result-status status-warning">${network.openPorts.length} Found</div>
-                            </div>
-                            <div class="result-data">
-                                ${network.openPorts.map(port => 
-                                    `Port ${port.port}: ${port.service} (${port.status})`
-                                ).join('<br>')}
-                            </div>
-                        </div>
-                    `;
-                }
-
-                if (network.subdomains && network.subdomains.length > 0) {
-                    html += `
-                        <div class="result-item">
-                            <div class="result-header">
-                                <div class="result-title">Subdomains</div>
-                                <div class="result-status status-success">${network.subdomains.length} Found</div>
-                            </div>
-                            <div class="result-data">
-                                ${network.subdomains.map(sub => sub.subdomain).join('<br>')}
-                            </div>
-                        </div>
-                    `;
-                }
-            }
-
-            // Email Results
-            if (data.findings.email) {
-                const email = data.findings.email;
-                const breachStatus = email.breachCheck.found ? 'error' : 'success';
+            data.results.forEach(result => {
+                const statusClass = result.status === 'success' ? 'success' : 
+                                   result.status === 'error' ? 'error' : 'warning';
                 
                 html += `
                     <div class="result-item">
                         <div class="result-header">
-                            <div class="result-title">Email Analysis</div>
-                            <div class="result-status status-${breachStatus}">
-                                ${email.breachCheck.found ? 'Compromised' : 'Clean'}
-                            </div>
+                            <div class="result-title">${result.platform}</div>
+                            <div class="result-status status-${statusClass}">${result.status}</div>
                         </div>
                         <div class="result-data">
-                            Email: ${email.email}<br>
-                            Domain: ${email.domain}<br>
-                            Valid Format: ${email.validation.valid ? 'Yes' : 'No'}<br>
-                            ${email.breachCheck.found ? 
-                                `Breaches: ${email.breachCheck.breaches.join(', ')}` : 
-                                'No known breaches found'
-                            }
+                            ${result.data || 'Sem dados adicionais'}
+                            ${result.url ? '<br><a href="' + result.url + '" target="_blank" style="color: #00d9ff;">Ver Perfil</a>' : ''}
                         </div>
                     </div>
                 `;
-            }
-
-            // Recommendations
-            if (data.recommendations && data.recommendations.length > 0) {
-                html += `
-                    <div class="result-item">
-                        <div class="result-header">
-                            <div class="result-title">Security Recommendations</div>
-                            <div class="result-status status-warning">Action Required</div>
-                        </div>
-                        <div class="result-data">
-                            ${data.recommendations.map(rec => `• ${rec}`).join('<br>')}
-                        </div>
-                    </div>
-                `;
-            }
+            });
 
             results.innerHTML = html;
         }
@@ -597,23 +589,22 @@
             results.innerHTML = `
                 <div class="result-item">
                     <div class="result-header">
-                        <div class="result-title">Scan Error</div>
-                        <div class="result-status status-error">Failed</div>
+                        <div class="result-title">Erro na Busca</div>
+                        <div class="result-status status-error">Falhou</div>
                     </div>
-                    <div class="result-data">${message}</div>
+                    <div class="result-data">Erro: ${message}</div>
                 </div>
             `;
         }
 
-        function addToHistory(target, data) {
+        function addToHistory(target, results) {
             scanHistory.unshift({
                 target,
                 timestamp: new Date(),
-                findings: data.summary.totalFindings,
+                findings: results.length,
                 type: currentScanType
             });
 
-            // Keep only last 10 scans
             if (scanHistory.length > 10) {
                 scanHistory = scanHistory.slice(0, 10);
             }
@@ -670,13 +661,13 @@
             
             switch(type) {
                 case 'subdomain':
-                    currentScanType = 'network';
+                    currentScanType = 'domain';
                     break;
                 case 'port':
-                    currentScanType = 'network';
+                    currentScanType = 'domain';
                     break;
                 default:
-                    currentScanType = 'comprehensive';
+                    currentScanType = 'auto';
             }
 
             startScan();

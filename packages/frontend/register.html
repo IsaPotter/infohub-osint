@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfoHub OSINT - Cadastro</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #00ff88;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .register-container {
+            background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0,255,136,0.3);
+        }
+        
+        .register-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0,255,136,0.5);
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #00d9ff;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #00d9ff;
+            background: #0a0a0a;
+            color: #00ff88;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: #00ff88;
+            box-shadow: 0 0 15px rgba(0,255,136,0.4);
+        }
+        
+        .password-group {
+            position: relative;
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 40px;
+            cursor: pointer;
+            color: #00d9ff;
+        }
+        
+        .btn-register {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #00ff88 0%, #00d9ff 100%);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,255,136,0.3);
+            margin-top: 10px;
+        }
+        
+        .btn-register:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,255,136,0.5);
+        }
+        
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #888;
+        }
+        
+        .login-link a {
+            color: #00d9ff;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .login-link a:hover {
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0,255,136,0.5);
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+        }
+        
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border: 2px solid #00d9ff;
+            border-radius: 50%;
+            color: #00d9ff;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-size: 20px;
+        }
+        
+        .social-link:hover {
+            background: #00d9ff;
+            color: #000;
+            transform: translateY(-3px);
+        }
+        
+        .error {
+            color: #ff0055;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .success {
+            color: #00ff88;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-header">
+            <div class="logo">InfoHub OSINT</div>
+            <div class="subtitle">Crie sua conta agora</div>
+        </div>
+        
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="name">Nome Completo</label>
+                <input type="text" id="name" name="name" placeholder="Seu nome" required>
+                <div class="error" id="nameError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="seu@email.com" required>
+                <div class="error" id="emailError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="username">Usuário</label>
+                <input type="text" id="username" name="username" placeholder="seu_usuario" required>
+                <div class="error" id="usernameError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Senha</label>
+                <div class="password-group">
+                    <input type="password" id="password" name="password" placeholder="Mínimo 8 caracteres" required>
+                    <span class="toggle-password" onclick="togglePassword()">👁️</span>
+                </div>
+                <div class="error" id="passwordError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirmPassword">Confirmar Senha</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirme sua senha" required>
+                <div class="error" id="confirmError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="plan">Plano</label>
+                <select id="plan" name="plan" required>
+                    <option value="">Selecione um plano</option>
+                    <option value="free">Gratuito - 10 buscas/hora</option>
+                    <option value="premium">Premium - R$ 89,90/mês</option>
+                    <option value="enterprise">Enterprise - Customizado</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn-register">Criar Conta</button>
+            
+            <div class="login-link">
+                Já tem conta? <a href="login.html">Faça login aqui</a>
+            </div>
+        </form>
+        
+        <div class="social-links">
+            <a href="https://github.com" target="_blank" class="social-link" title="GitHub">🐙</a>
+            <a href="https://instagram.com" target="_blank" class="social-link" title="Instagram">📷</a>
+            <a href="https://wa.me" target="_blank" class="social-link" title="WhatsApp">💬</a>
+        </div>
+    </div>
+    
+    <script>
+        function togglePassword() {
+            const pwd = document.getElementById('password');
+            pwd.type = pwd.type === 'password' ? 'text' : 'password';
+        }
+        
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const plan = document.getElementById('plan').value;
+            
+            let valid = true;
+            
+            // Clear errors
+            document.querySelectorAll('.error').forEach(el => el.textContent = '');
+            
+            // Validations
+            if (name.length < 3) {
+                document.getElementById('nameError').textContent = 'Nome deve ter pelo menos 3 caracteres';
+                valid = false;
+            }
+            
+            if (!email.includes('@')) {
+                document.getElementById('emailError').textContent = 'Email inválido';
+                valid = false;
+            }
+            
+            if (username.length < 3) {
+                document.getElementById('usernameError').textContent = 'Usuário deve ter pelo menos 3 caracteres';
+                valid = false;
+            }
+            
+            if (password.length < 8) {
+                document.getElementById('passwordError').textContent = 'Senha deve ter pelo menos 8 caracteres';
+                valid = false;
+            }
+            
+            if (password !== confirmPassword) {
+                document.getElementById('confirmError').textContent = 'Senhas não conferem';
+                valid = false;
+            }
+            
+            if (!plan) {
+                alert('Selecione um plano');
+                valid = false;
+            }
+            
+            if (valid) {
+                // Simular registro
+                localStorage.setItem('user', JSON.stringify({
+                    name, email, username, plan,
+                    createdAt: new Date().toISOString()
+                }));
+                
+                alert('Cadastro realizado com sucesso!');
+                window.location.href = 'dashboard.html';
+            }
+        });
+    </script>
+</body>
+</html>

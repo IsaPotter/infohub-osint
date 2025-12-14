@@ -14,7 +14,7 @@
     "validator": "^13.9.0"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": "18.x"
   },
   "keywords": ["osint", "intelligence", "security", "reconnaissance"],
   "author": "InfoHub OSINT",
