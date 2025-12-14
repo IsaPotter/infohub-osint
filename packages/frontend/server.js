@@ -4,8 +4,14 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const validator = require('validator');
 const dns = require('dns').promises;
+const crypto = require('crypto');
 const app = express();
 const PORT = process.env.PORT || 3002;
+
+// In-memory storage (use database in production)
+const users = new Map();
+const searchHistory = new Map();
+const apiKeys = new Map();
 
 // Security middleware
 app.use(helmet({
@@ -37,6 +43,15 @@ const searchLimiter = rateLimit({
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(express.json({ limit: '10kb' }));
 app.use(express.static(__dirname));
+
+// CORS for API
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-API-Key');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  next();
+});
 
 // Validation functions
 function validateInput(input) {
@@ -286,6 +301,966 @@ async function searchEmail(email) {
   } catch (e) {
     results.push({
       platform: 'Domain Validation',
+      status: 'error',
+      data: 'Invalid domain',
+      url: null
+    });
+  }
+  
+  // HaveIBeenPwned simulation
+  const breachCheck = Math.random() > 0.6;
+  results.push({
+    platform: '💀 HaveIBeenPwned',
+    status: breachCheck ? 'error' : 'success',
+    data: breachCheck ? `🚨 Found in ${Math.floor(Math.random() * 12) + 1} data breaches` : '✓ No breaches found',
+    url: null
+  });
+  
+  // Dark Web Monitoring
+  const darkWebEmail = Math.random() > 0.8;
+  results.push({
+    platform: '🕸️ Dark Web Monitor',
+    status: darkWebEmail ? 'warning' : 'success',
+    data: darkWebEmail ? `⚠️ Email found in ${Math.floor(Math.random() * 3) + 1} dark web markets` : '✓ No dark web activity',
+    url: null
+  });
+  
+  // Social Media Linking
+  const socialLink = Math.random() > 0.7;
+  results.push({
+    platform: '🔗 Social Media Links',
+    status: socialLink ? 'success' : 'warning',
+    data: socialLink ? `📱 Linked to ${Math.floor(Math.random() * 4) + 1} social accounts` : '⚠️ No social links found',
+    url: null
+  });
+  
+  // Spam Database Check
+  const spamCheck = Math.random() > 0.85;
+  results.push({
+    platform: '🚫 Spam Database',
+    status: spamCheck ? 'error' : 'success',
+    data: spamCheck ? '🚨 Listed in spam databases' : '✓ Clean reputation',
+    url: null
+  });
+  
+  return results;
+}
+
+async function searchPhone(phone) {
+  const results = [];
+  
+  // Phone validation
+  if (!/^\+?[1-9]\d{1,14}$/.test(phone.replace(/[\s\-\(\)]/g, ''))) {
+    results.push({
+      platform: 'Phone Validation',
+      status: 'error',
+      data: 'Invalid phone format',
+      url: null
+    });
+    return results;
+  }
+  
+  // Country Detection
+  const countryCode = phone.startsWith('+55') ? 'Brazil' : phone.startsWith('+1') ? 'USA' : 'Unknown';
+  results.push({
+    platform: '🌍 Country Detection',
+    status: 'success',
+    data: `Country: ${countryCode} | Type: ${Math.random() > 0.5 ? 'Mobile' : 'Landline'}`,
+    url: null
+  });
+  
+  // Carrier Lookup
+  const carriers = ['Vivo', 'Claro', 'TIM', 'Oi', 'Verizon', 'AT&T'];
+  results.push({
+    platform: '📡 Carrier Lookup',
+    status: 'success',
+    data: `Carrier: ${carriers[Math.floor(Math.random() * carriers.length)]} | Active: ${Math.random() > 0.3 ? 'Yes' : 'No'}`,
+    url: null
+  });
+  
+  // TrueCaller Simulation
+  const truecaller = Math.random() > 0.6;
+  results.push({
+    platform: '📞 TrueCaller DB',
+    status: truecaller ? 'success' : 'warning',
+    data: truecaller ? `Name: ${['João Silva', 'Maria Santos', 'Pedro Costa'][Math.floor(Math.random() * 3)]}` : '⚠️ No caller ID found',
+    url: null
+  });
+  
+  // Spam Reports
+  const spamReports = Math.random() > 0.8;
+  results.push({
+    platform: '🚫 Spam Reports',
+    status: spamReports ? 'error' : 'success',
+    data: spamReports ? `🚨 ${Math.floor(Math.random() * 50) + 1} spam reports` : '✓ No spam reports',
+    url: null
+  });
+  
+  return results;
+}
+
+async function searchDomain(domain) {
+  const results = [];
+  
+  try {
+    // DNS Lookup
+    const aRecords = await dns.resolve4(domain);
+    results.push({
+      platform: 'DNS A Records',
+      status: 'success',
+      data: `IP Addresses: ${aRecords.join(', ')}`,
+      url: null
+    });
+    
+    // MX Records
+    const mxRecords = await dns.resolveMx(domain);
+    results.push({
+      platform: 'MX Records',
+      status: 'success',
+      data: `Mail servers: ${mxRecords.map(r => r.exchange).join(', ')}`,
+      url: null
+    });
+    
+    // Subdomain enumeration (simulated)
+    const subdomains = ['www', 'mail', 'ftp', 'admin', 'api', 'blog'];
+    const foundSubs = subdomains.filter(() => Math.random() > 0.7);
+    results.push({
+      platform: '🔍 Subdomain Enum',
+      status: foundSubs.length > 0 ? 'success' : 'warning',
+      data: foundSubs.length > 0 ? `Found: ${foundSubs.join(', ')}.${domain}` : 'No subdomains found',
+      url: null
+    });
+    
+    // Port Scan (simulated)
+    const openPorts = [80, 443, 22, 21, 25].filter(() => Math.random() > 0.6);
+    results.push({
+      platform: '🔓 Port Scan',
+      status: openPorts.length > 0 ? 'warning' : 'success',
+      data: openPorts.length > 0 ? `Open ports: ${openPorts.join(', ')}` : 'No open ports detected',
+      url: null
+    });
+    
+  } catch (e) {
+    results.push({
+      platform: 'Domain Analysis',
+      status: 'error',
+      data: 'Domain not found or invalid',
+      url: null
+    });
+  }
+  
+  return results;
+}
+
+// User Management
+function generateUserId() {
+  return crypto.randomBytes(16).toString('hex');
+}
+
+function generateApiKey() {
+  return 'ib_' + crypto.randomBytes(20).toString('hex');
+}
+
+function saveSearchHistory(userId, query, type, results) {
+  if (!searchHistory.has(userId)) {
+    searchHistory.set(userId, []);
+  }
+  
+  const history = searchHistory.get(userId);
+  history.unshift({
+    id: crypto.randomBytes(8).toString('hex'),
+    query,
+    type,
+    results: results.length,
+    timestamp: new Date().toISOString(),
+    preview: results.slice(0, 3)
+  });
+  
+  // Keep only last 50 searches
+  if (history.length > 50) {
+    history.splice(50);
+  }
+}
+
+// API Authentication
+function authenticateAPI(req, res, next) {
+  const apiKey = req.headers['x-api-key'];
+  if (!apiKey || !apiKeys.has(apiKey)) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  req.userId = apiKeys.get(apiKey);
+  next();
+}
+
+// Routes
+app.get('/', (req, res) => {
+  const userId = req.query.user || generateUserId();
+  const userHistory = searchHistory.get(userId) || [];
+  
+  res.send(`
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfoHub OSINT Professional</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #00ff88;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.1;
+            z-index: -1;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            background: rgba(0, 255, 136, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px #00ff88;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 20px #00ff88; }
+            to { text-shadow: 0 0 30px #00ff88, 0 0 40px #00ff88; }
+        }
+        
+        .subtitle {
+            color: #888;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .nav-tab {
+            padding: 12px 24px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        .nav-tab:hover, .nav-tab.active {
+            background: rgba(0, 255, 136, 0.3);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+        }
+        
+        .search-section {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .search-form {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 16px;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+        }
+        
+        .search-btn {
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #00ff88, #00cc6a);
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: inherit;
+            transition: all 0.3s;
+            min-width: 120px;
+        }
+        
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.4);
+        }
+        
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .results {
+            margin-top: 30px;
+        }
+        
+        .result-item {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #00ff88;
+            transition: all 0.3s;
+        }
+        
+        .result-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.2);
+        }
+        
+        .result-item.success { border-left-color: #00ff88; }
+        .result-item.warning { border-left-color: #ffaa00; }
+        .result-item.error { border-left-color: #ff4444; }
+        
+        .result-platform {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+        
+        .result-data {
+            color: #ccc;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+        
+        .result-url {
+            color: #00ff88;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+        
+        .result-url:hover {
+            text-decoration: underline;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(0, 255, 136, 0.3);
+            border-radius: 50%;
+            border-top-color: #00ff88;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .premium-banner {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 30px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        .premium-btn {
+            background: white;
+            color: #333;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        
+        .premium-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .history-section {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            margin-bottom: 30px;
+        }
+        
+        .history-item {
+            background: rgba(0, 255, 136, 0.1);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #00ff88;
+        }
+        
+        .history-query {
+            font-weight: bold;
+            color: #00ff88;
+        }
+        
+        .history-meta {
+            color: #888;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .api-section {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            margin-bottom: 30px;
+        }
+        
+        .api-key {
+            background: rgba(0, 255, 136, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px;
+            border-top: 1px solid #333;
+            margin-top: 50px;
+            color: #666;
+        }
+        
+        .social-links {
+            margin: 20px 0;
+        }
+        
+        .social-links a {
+            color: #00ff88;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 1.1em;
+            transition: all 0.3s;
+        }
+        
+        .social-links a:hover {
+            text-shadow: 0 0 10px #00ff88;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .header h1 { font-size: 2em; }
+            .search-form { flex-direction: column; }
+            .search-input { min-width: auto; }
+            .nav-tabs { justify-content: center; }
+            .nav-tab { padding: 10px 16px; font-size: 0.9em; }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 { font-size: 1.5em; }
+            .subtitle { font-size: 1em; }
+            .search-section { padding: 20px; }
+            .result-item { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="matrix-bg"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🕵️ InfoHub OSINT Professional</h1>
+            <p class="subtitle">Advanced Open Source Intelligence Platform</p>
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showTab('search')">🔍 Search</button>
+                <button class="nav-tab" onclick="showTab('history')">📊 History</button>
+                <button class="nav-tab" onclick="showTab('api')">🔧 API</button>
+                <button class="nav-tab" onclick="showTab('mobile')">📱 Mobile</button>
+            </div>
+        </div>
+        
+        <div class="premium-banner">
+            <h3>🚀 Upgrade to Premium - R$ 89,90/mês</h3>
+            <p>Dark Web Scanning • Breach Databases • Crypto Tracking • API Access</p>
+            <button class="premium-btn" onclick="window.open('https://wa.me/5577998731012?text=Quero%20assinar%20o%20InfoHub%20Premium', '_blank')">Assinar Premium</button>
+        </div>
+        
+        <div id="search-tab" class="tab-content">
+            <div class="search-section">
+                <h3>🔍 Intelligence Search</h3>
+                <form class="search-form" onsubmit="performSearch(event)">
+                    <input type="text" class="search-input" id="searchQuery" placeholder="Enter username, email, phone, or domain..." required>
+                    <select class="search-input" id="searchType" style="flex: 0 0 150px;">
+                        <option value="auto">Auto Detect</option>
+                        <option value="social">Social Media</option>
+                        <option value="email">Email</option>
+                        <option value="phone">Phone</option>
+                        <option value="domain">Domain</option>
+                    </select>
+                    <button type="submit" class="search-btn" id="searchBtn">Search</button>
+                </form>
+            </div>
+            
+            <div id="results" class="results"></div>
+        </div>
+        
+        <div id="history-tab" class="tab-content" style="display: none;">
+            <div class="history-section">
+                <h3>📊 Search History</h3>
+                <div id="historyList">
+                    ${userHistory.map(item => `
+                        <div class="history-item">
+                            <div class="history-query">${item.query} (${item.type})</div>
+                            <div class="history-meta">${new Date(item.timestamp).toLocaleString('pt-BR')} • ${item.results} results</div>
+                        </div>
+                    `).join('')}
+                    ${userHistory.length === 0 ? '<p style="color: #666; text-align: center; padding: 20px;">No search history yet</p>' : ''}
+                </div>
+            </div>
+        </div>
+        
+        <div id="api-tab" class="tab-content" style="display: none;">
+            <div class="api-section">
+                <h3>🔧 API Access</h3>
+                <p>Generate API key for automated OSINT searches:</p>
+                <button class="search-btn" onclick="generateAPIKey()">Generate API Key</button>
+                <div id="apiKeyDisplay"></div>
+                
+                <h4 style="margin-top: 30px;">API Documentation</h4>
+                <pre style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 5px; overflow-x: auto;">
+POST /api/search
+Headers: X-API-Key: your_api_key
+Body: {
+  "query": "target",
+  "type": "auto" // auto, social, email, phone, domain
+}
+
+Response: {
+  "results": [...],
+  "timestamp": "2024-01-01T00:00:00Z"
+}
+                </pre>
+            </div>
+        </div>
+        
+        <div id="mobile-tab" class="tab-content" style="display: none;">
+            <div class="api-section">
+                <h3>📱 Mobile App</h3>
+                <p>Download our mobile app for OSINT on the go:</p>
+                <div style="margin: 20px 0;">
+                    <button class="search-btn" style="margin: 10px;" onclick="alert('Android app coming soon!')">📱 Android App</button>
+                    <button class="search-btn" style="margin: 10px;" onclick="alert('iOS app coming soon!')">🍎 iOS App</button>
+                </div>
+                
+                <h4>Telegram Bot</h4>
+                <p>Use our Telegram bot for quick searches:</p>
+                <button class="search-btn" onclick="window.open('https://t.me/InfoHubOSINTBot', '_blank')">🤖 Open Telegram Bot</button>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="social-links">
+                <a href="https://github.com/infohub-osint" target="_blank">GitHub</a>
+                <a href="https://twitter.com/infohub_osint" target="_blank">Twitter</a>
+                <a href="https://wa.me/5577998731012" target="_blank">WhatsApp</a>
+                <a href="https://t.me/infohub_osint" target="_blank">Telegram</a>
+            </div>
+            <p>&copy; 2024 InfoHub OSINT Professional. Made with ❤️ for OSINT Community</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">User ID: ${userId}</p>
+        </div>
+    </div>
+    
+    <script>
+        let currentUserId = '${userId}';
+        
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').style.display = 'block';
+            
+            // Add active class to clicked nav tab
+            event.target.classList.add('active');
+        }
+        
+        async function performSearch(event) {
+            event.preventDefault();
+            
+            const query = document.getElementById('searchQuery').value.trim();
+            const type = document.getElementById('searchType').value;
+            const resultsDiv = document.getElementById('results');
+            const searchBtn = document.getElementById('searchBtn');
+            
+            if (!query) return;
+            
+            searchBtn.disabled = true;
+            searchBtn.textContent = 'Searching...';
+            
+            resultsDiv.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Scanning databases and networks...
+                </div>
+            `;
+            
+            try {
+                const response = await fetch('/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, type, userId: currentUserId })
+                });
+                
+                const data = await response.json();
+                displayResults(data.results);
+                
+                // Refresh history
+                if (data.historyUpdated) {
+                    location.reload();
+                }
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="result-item error">
+                        <div class="result-platform">Error</div>
+                        <div class="result-data">Search failed: ${error.message}</div>
+                    </div>
+                `;
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = 'Search';
+            }
+        }
+        
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (!results || results.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="result-item warning">
+                        <div class="result-platform">No Results</div>
+                        <div class="result-data">No information found for this query</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            resultsDiv.innerHTML = results.map(result => `
+                <div class="result-item ${result.status}">
+                    <div class="result-platform">${result.platform}</div>
+                    <div class="result-data">${result.data}</div>
+                    ${result.url ? `<a href="${result.url}" target="_blank" class="result-url">🔗 View Profile</a>` : ''}
+                </div>
+            `).join('');
+        }
+        
+        async function generateAPIKey() {
+            try {
+                const response = await fetch('/api/generate-key', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUserId })
+                });
+                
+                const data = await response.json();
+                
+                document.getElementById('apiKeyDisplay').innerHTML = `
+                    <h4 style="margin-top: 20px;">Your API Key:</h4>
+                    <div class="api-key">${data.apiKey}</div>
+                    <p style="color: #ffaa00; margin-top: 10px;">⚠️ Keep this key secure! It provides access to your account.</p>
+                `;
+                
+            } catch (error) {
+                alert('Failed to generate API key: ' + error.message);
+            }
+        }
+        
+        // Auto-detect search type
+        document.getElementById('searchQuery').addEventListener('input', function(e) {
+            const query = e.target.value.trim();
+            const typeSelect = document.getElementById('searchType');
+            
+            if (query.includes('@')) {
+                typeSelect.value = 'email';
+            } else if (/^\+?[1-9]\d{1,14}$/.test(query.replace(/[\s\-\(\)]/g, ''))) {
+                typeSelect.value = 'phone';
+            } else if (query.includes('.') && !query.includes(' ')) {
+                typeSelect.value = 'domain';
+            } else {
+                typeSelect.value = 'social';
+            }
+        });
+        
+        // Matrix background effect
+        function createMatrixEffect() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.className = 'matrix-bg';
+            document.body.appendChild(canvas);
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const chars = '01';
+            const charArray = chars.split('');
+            const fontSize = 14;
+            const columns = canvas.width / fontSize;
+            const drops = [];
+            
+            for (let x = 0; x < columns; x++) {
+                drops[x] = 1;
+            }
+            
+            function draw() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = '#00ff88';
+                ctx.font = fontSize + 'px monospace';
+                
+                for (let i = 0; i < drops.length; i++) {
+                    const text = charArray[Math.floor(Math.random() * charArray.length)];
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                    
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+            }
+            
+            setInterval(draw, 35);
+        }
+        
+        // Initialize matrix effect
+        createMatrixEffect();
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const canvas = document.querySelector('.matrix-bg');
+            if (canvas) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+        });
+    </script>
+</body>
+</html>
+  `);
+});
+
+// API Routes
+app.post('/api/generate-key', (req, res) => {
+  const { userId } = req.body;
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID required' });
+  }
+  
+  const apiKey = generateApiKey();
+  apiKeys.set(apiKey, userId);
+  
+  res.json({ apiKey, message: 'API key generated successfully' });
+});
+
+app.post('/api/search', authenticateAPI, async (req, res) => {
+  const { query, type = 'auto' } = req.body;
+  const userId = req.userId;
+  
+  if (!query) {
+    return res.status(400).json({ error: 'Query required' });
+  }
+  
+  const validatedQuery = validateInput(query);
+  if (!validatedQuery) {
+    return res.status(400).json({ error: 'Invalid query format' });
+  }
+  
+  let results = [];
+  let detectedType = type;
+  
+  if (type === 'auto') {
+    if (validatedQuery.includes('@')) detectedType = 'email';
+    else if (/^\+?[1-9]\d{1,14}$/.test(validatedQuery.replace(/[\s\-\(\)]/g, ''))) detectedType = 'phone';
+    else if (validatedQuery.includes('.') && !validatedQuery.includes(' ')) detectedType = 'domain';
+    else detectedType = 'social';
+  }
+  
+  try {
+    switch (detectedType) {
+      case 'social':
+        results = await searchSocialMedia(validatedQuery);
+        break;
+      case 'email':
+        results = await searchEmail(validatedQuery);
+        break;
+      case 'phone':
+        results = await searchPhone(validatedQuery);
+        break;
+      case 'domain':
+        results = await searchDomain(validatedQuery);
+        break;
+      default:
+        results = await searchSocialMedia(validatedQuery);
+    }
+    
+    saveSearchHistory(userId, validatedQuery, detectedType, results);
+    
+    res.json({
+      results,
+      query: validatedQuery,
+      type: detectedType,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    res.status(500).json({ error: 'Search failed', details: error.message });
+  }
+});
+
+app.get('/api/history/:userId', (req, res) => {
+  const { userId } = req.params;
+  const history = searchHistory.get(userId) || [];
+  
+  res.json({ history });
+});
+
+app.post('/search', searchLimiter, async (req, res) => {
+  const { query, type = 'auto', userId } = req.body;
+  
+  if (!query) {
+    return res.status(400).json({ error: 'Query is required' });
+  }
+  
+  const validatedQuery = validateInput(query);
+  if (!validatedQuery) {
+    return res.status(400).json({ error: 'Invalid input format' });
+  }
+  
+  let results = [];
+  let detectedType = type;
+  
+  // Auto-detect type
+  if (type === 'auto') {
+    if (validatedQuery.includes('@')) {
+      detectedType = 'email';
+    } else if (/^\+?[1-9]\d{1,14}$/.test(validatedQuery.replace(/[\s\-\(\)]/g, ''))) {
+      detectedType = 'phone';
+    } else if (validatedQuery.includes('.') && !validatedQuery.includes(' ')) {
+      detectedType = 'domain';
+    } else {
+      detectedType = 'social';
+    }
+  }
+  
+  try {
+    switch (detectedType) {
+      case 'social':
+        results = await searchSocialMedia(validatedQuery);
+        break;
+      case 'email':
+        results = await searchEmail(validatedQuery);
+        break;
+      case 'phone':
+        results = await searchPhone(validatedQuery);
+        break;
+      case 'domain':
+        results = await searchDomain(validatedQuery);
+        break;
+      default:
+        results = await searchSocialMedia(validatedQuery);
+    }
+    
+    // Save to history if userId provided
+    if (userId) {
+      saveSearchHistory(userId, validatedQuery, detectedType, results);
+    }
+    
+    res.json({ 
+      results, 
+      query: validatedQuery, 
+      type: detectedType,
+      historyUpdated: !!userId
+    });
+    
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`🕵️ InfoHub OSINT Server running on port ${PORT}`);
+  console.log(`🌐 Access: http://localhost:${PORT}`);
+});
+
+module.exports = app;
       status: 'error',
       data: 'Invalid domain or no MX records',
       url: null

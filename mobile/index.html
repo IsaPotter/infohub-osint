@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfoHub OSINT Mobile</title>
+    <meta name="theme-color" content="#00ff88">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #00ff88;
+            min-height: 100vh;
+            padding: 10px;
+        }
+        .mobile-header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        .search-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #00ff88, #00cc6a);
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .action-btn {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-header">
+        <h1>🕵️ InfoHub OSINT</h1>
+        <p>Mobile Intelligence Platform</p>
+    </div>
+    
+    <div style="background: rgba(0, 0, 0, 0.8); padding: 20px; border-radius: 15px; margin-bottom: 20px;">
+        <input type="text" class="search-input" id="mobileQuery" placeholder="Quick search...">
+        <button class="search-btn" onclick="quickSearch()">🔍 Search</button>
+    </div>
+    
+    <div class="quick-actions">
+        <div class="action-btn" onclick="setSearchType('social')">
+            <div style="font-size: 2em;">👤</div>
+            <div>Social Media</div>
+        </div>
+        <div class="action-btn" onclick="setSearchType('email')">
+            <div style="font-size: 2em;">📧</div>
+            <div>Email Intel</div>
+        </div>
+        <div class="action-btn" onclick="setSearchType('phone')">
+            <div style="font-size: 2em;">📱</div>
+            <div>Phone Lookup</div>
+        </div>
+        <div class="action-btn" onclick="setSearchType('domain')">
+            <div style="font-size: 2em;">🌐</div>
+            <div>Domain Scan</div>
+        </div>
+    </div>
+    
+    <div id="mobileResults" style="display: none; background: rgba(0, 0, 0, 0.8); border-radius: 15px; padding: 20px;"></div>
+    
+    <script>
+        let currentSearchType = 'auto';
+        
+        function setSearchType(type) {
+            currentSearchType = type;
+        }
+        
+        async function quickSearch() {
+            const query = document.getElementById('mobileQuery').value.trim();
+            if (!query) return;
+            
+            const resultsDiv = document.getElementById('mobileResults');
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<div style="text-align: center; padding: 20px;">🔍 Searching...</div>';
+            
+            try {
+                const response = await fetch('/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, type: currentSearchType })
+                });
+                
+                const data = await response.json();
+                resultsDiv.innerHTML = data.results.map(result => `
+                    <div style="background: rgba(0, 255, 136, 0.1); padding: 15px; margin-bottom: 10px; border-radius: 10px;">
+                        <div style="font-weight: bold;">${result.platform}</div>
+                        <div style="color: #ccc; font-size: 0.9em;">${result.data}</div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                resultsDiv.innerHTML = '<div style="color: #ff4444; text-align: center;">❌ Search failed</div>';
+            }
+        }
+    </script>
+</body>
+</html>
